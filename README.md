@@ -1,68 +1,40 @@
 # keystone-data-transform-pipe
 
-`keystone-data-transform-pipe` packages a practical data engineering exercise in C++. The emphasis is on deterministic behavior, a small public API, and examples that explain the tradeoffs.
+`keystone-data-transform-pipe` explores data engineering with a small C++ codebase and local fixtures. The technical goal is to build a C++ toolkit that studies transform behavior through negative fixtures, with human-readable error snapshots and synthetic fixtures only.
 
-## How I Read Keystone Data Transform Pipe
+## Why This Exists
 
-The useful thing to inspect here is how the same score rule is represented in code, metadata, and examples. If those three pieces disagree, the audit script should make the drift visible.
+This is intentionally local and self-contained so it can be inspected without credentials, services, or seeded history.
 
-## Problem Shape
+## Keystone Data Transform Pipe Review Notes
 
-The repository exists to keep a technical idea small enough to reason about. The implementation avoids external dependencies where possible, then uses fixtures to make changes easy to review.
+The first comparison I would make is `schema drift` against `quality gap` because it shows where the rule is most opinionated.
 
-## Repository Map
+## Capabilities
 
-- `src`: primary implementation
-- `tests`: verification harness
-- `fixtures`: compact golden scenarios
-- `examples`: expanded scenario set
-- `metadata`: project constants and verification metadata
-- `docs`: operations and extension notes
-- `scripts`: local verification and audit commands
+- `fixtures/domain_review.csv` adds cases for schema drift and lineage depth.
+- `metadata/domain-review.json` records the same cases in structured form.
+- `config/review-profile.json` captures the read order and the two review questions.
+- `examples/keystone-data-transform-walkthrough.md` walks through the case spread.
+- The C++ code includes a review path for `schema drift` and `quality gap`.
+- `docs/field-notes.md` explains the strongest and weakest cases.
 
-## Main Behaviors
+## Implementation Shape
 
-- Includes extended examples for pipeline state, including `surge` and `degraded`.
-- Documents quality gates tradeoffs in `docs/operations.md`.
-- Runs locally with a single verification command and no external credentials.
-- Stores project constants and verification metadata in `metadata/project.json`.
-- Adds a repository audit script that checks structure before running the language verifier.
+The implementation keeps the scoring rule plain: reward signal and confidence, preserve slack, penalize drag, then classify the result into a review lane.
 
-## Internal Model
+The C++ code keeps the review rule close to the tests.
 
-The core is a scoring model over demand, capacity, latency, risk, and weight. That keeps schema drift, lineage checks, and pipeline state in one explicit decision path. The threshold is 165, with risk penalty 4, latency penalty 2, and weight bonus 5. The C++ project uses a small library boundary and a compiled assertion harness.
-
-## Run It Locally
-
-Install C++ and run the commands from the repository root. The project does not need credentials or a hosted service.
-
-## Scenario Walkthrough
-
-The examples are meant to be readable before they are exhaustive. They cover enough variation to show how latency and risk can pull a decision below the threshold.
-
-## How To Run It
+## Local Usage
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 ```
 
-This runs the language-level build or test path against the compact fixture set.
+## Verification
 
-## Validation
+That command is also the regression path. It verifies the domain cases and catches mismatches between the CSV, metadata, and code.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/audit.ps1
-```
+## Roadmap
 
-The audit command checks repository structure and README constraints before it delegates to the verifier.
-
-## Follow-Up Work
-
-- Add malformed input fixtures so the failure path is as visible as the happy path.
-- Split the scoring constants into a typed configuration object and validate it before use.
-- Add a comparison mode that shows how decisions change when one signal is adjusted.
-- Add one more data engineering fixture that focuses on a malformed or borderline input.
-
-## Known Edges
-
-This code is local-first. It makes no claim about deployed usage and avoids credentials, hosted state, and environment-specific setup.
+No external service is required. A deeper version would add more negative cases and a clearer boundary around invalid input.
